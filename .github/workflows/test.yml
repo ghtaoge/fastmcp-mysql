@@ -1,0 +1,41 @@
+name: Test & Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install -r requirements.txt
+
+      - name: Lint with ruff
+        run: ruff check server.py tests/
+
+      - name: Run tests
+        run: pytest tests/ -v
+        env:
+          # 测试使用 mock 模式 — 以下为占位值，绝非真实凭证
+          MYSQL_HOST: localhost
+          MYSQL_PORT: 3306
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_pass
+          MYSQL_DATABASE: test_db
